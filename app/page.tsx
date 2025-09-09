@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { BusStop, BusLine } from './types';
+import { BusLine } from './types';
 
-
-// Dynamically import the Map component to avoid SSR issues with Leaflet
+// Dynamically import BusMap to avoid SSR issues
 const BusMap = dynamic(() => import('./components/BusMap'), {
   ssr: false,
   loading: () => (
@@ -14,8 +13,6 @@ const BusMap = dynamic(() => import('./components/BusMap'), {
     </div>
   ),
 });
-
-
 
 interface ApiResponse {
   message: string;
@@ -27,40 +24,20 @@ interface ApiResponse {
     description: string;
   };
   bus_lines: BusLine[];
-  operational_summary: {
-    total_buses: number;
-    active_buses: number;
-    maintenance_buses: number;
-    out_of_service_buses: number;
-    total_capacity: number;
-    current_passengers: number;
-    average_utilization: number;
-  };
-  filters: {
-    available_statuses: string[];
-    available_routes: string[];
-    applied: {
-      status: string | null;
-      busId: number | null;
-      routeNumber: string | null;
-    };
-  };
 }
 
-
 export default function Home() {
-  const [busData, setBusData] = useState<ApiResponse['bus_lines']>([]);
+  const [busData, setBusData] = useState<BusLine[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeBus, setActiveBus] = useState<number | null>(1);
   const [menuOpen, setMenuOpen] = useState(false);
 
-    useEffect(() => {
+  useEffect(() => {
     const loadData = async () => {
       try {
-        // استيراد JSON محلي
         const data: ApiResponse = (await import('./data/buses.json')).default;
-        setBusData(data.bus_lines); // هنا نستخدم bus_lines
+        setBusData(data.bus_lines);
       } catch (err) {
         console.error(err);
         setError('Failed to load data from local file');
@@ -71,7 +48,18 @@ export default function Home() {
     loadData();
   }, []);
 
-  const activeRoute = busData.find((bus) => bus.id === activeBus);
+  const activeRoute = busData.find(bus => bus.id === activeBus);
+
+  // تحويل البيانات لتتناسب مع BusMap
+  // تحويل البيانات لتتناسب مع BusMap
+const stopsForMap = activeRoute?.bus_stops.map(stop => ({
+  id: stop.id,
+  name: stop.name,
+  latitude: stop.latitude,           // بدل lat
+  longitude: stop.longitude,         // بدل lng
+  estimated_arrival: stop.estimated_arrival, // بدل next_arrival_time
+  is_next_stop: stop.is_next_stop,   // لتلوين next stop
+}));
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -92,15 +80,9 @@ export default function Home() {
         {menuOpen && (
           <div className="sm:hidden mt-4 pb-4">
             <div className="flex flex-col space-y-2">
-              <a href="#" className="text-gray-300 hover:text-white">
-                Home
-              </a>
-              <a href="#" className="text-gray-300 hover:text-white">
-                Buses
-              </a>
-              <a href="#" className="text-gray-300 hover:text-white">
-                About
-              </a>
+              <a href="#" className="text-gray-300 hover:text-white">Home</a>
+              <a href="#" className="text-gray-300 hover:text-white">Buses</a>
+              <a href="#" className="text-gray-300 hover:text-white">About</a>
             </div>
           </div>
         )}
@@ -108,12 +90,8 @@ export default function Home() {
 
       {/* Company Title */}
       <div className="bg-green-400 py-8 px-4 text-center">
-        <h1 className="text-3xl font-bold text-black">
-          Amana Transportation
-        </h1>
-        <p className="text-lg text-black">
-          Proudly Servicing Malaysian Bus Riders Since 2019!
-        </p>
+        <h1 className="text-3xl font-bold text-black">Amana Transportation</h1>
+        <p className="text-lg text-black">Proudly Servicing Malaysian Bus Riders Since 2019!</p>
       </div>
 
       <main className="flex-1 container mx-auto p-4 space-y-8">
@@ -124,7 +102,7 @@ export default function Home() {
 
         {/* Bus Buttons */}
         <div className="flex flex-wrap gap-2 justify-center mt-4">
-          {busData.map((bus) => (
+          {busData.map(bus => (
             <button
               key={bus.id}
               onClick={() => setActiveBus(bus.id)}
@@ -142,17 +120,15 @@ export default function Home() {
         {/* Map */}
         <section className="bg-gray-50 p-6 rounded-xl shadow-inner">
           {loading ? (
-            <div className="h-96 flex items-center justify-center">
-              Loading bus data...
-            </div>
+            <div className="h-96 flex items-center justify-center">Loading bus data...</div>
           ) : error ? (
             <div className="text-red-500 text-center">{error}</div>
           ) : (
-            activeRoute && <BusMap stops={activeRoute.bus_stops} />
+            
+            activeRoute && stopsForMap && <BusMap stops={stopsForMap} />
           )}
         </section>
-
-        {/* Bus Schedule Section */}
+         {/* Bus Schedule Section */}
         <section className="bg-yellow-100 py-4 px-4 text-center rounded-xl">
           <h2 className="text-xl font-semibold text-black">Bus Schedule</h2>
         </section>
