@@ -39,7 +39,7 @@ export default function Home() {
 
   const activeRoute = busData.find(bus => bus.id === activeBus);
 
-  // تحويل البيانات لتتناسب مع BusMap
+ 
   // تحويل البيانات لتتناسب مع BusMap
 const stopsForMap = activeRoute?.bus_stops.map(stop => ({
   id: stop.id,
@@ -101,7 +101,22 @@ const stopsForMap = activeRoute?.bus_stops.map(stop => ({
                   : 'bg-gray-300 border-gray-500 text-black'
               }`}
             >
-              {bus.name}
+              <span>{bus.name}</span>
+              {/* شريط التقدم */}
+              {bus.passengers && (
+                <div className="w-24 mt-1 bg-gray-200 rounded-full h-2.5">
+                  <div 
+                    className={`h-2.5 rounded-full ${
+                      bus.passengers.utilization_percentage < 50
+                        ? 'bg-green-500' // لون أخضر للازدحام المنخفض
+                        : bus.passengers.utilization_percentage < 80
+                          ? 'bg-yellow-500' // لون أصفر للازدحام المتوسط
+                          : 'bg-red-500' // لون أحمر للازدحام المرتفع
+                    }`}
+                    style={{ width: `${bus.passengers.utilization_percentage}%` }}
+                  ></div>
+                </div>
+              )}
             </button>
           ))}
         </div>
@@ -114,7 +129,7 @@ const stopsForMap = activeRoute?.bus_stops.map(stop => ({
             <div className="text-red-500 text-center">{error}</div>
           ) : (
             
-            activeRoute && stopsForMap && <BusMap stops={stopsForMap} />
+            activeRoute && stopsForMap && <BusMap route={activeRoute} />
           )}
         </section>
          {/* Bus Schedule Section */}
