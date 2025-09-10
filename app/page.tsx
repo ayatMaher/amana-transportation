@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { BusLine } from './types';
+import data from './data/buses.json';
 
 // Dynamically import BusMap to avoid SSR issues
 const BusMap = dynamic(() => import('./components/BusMap'), {
@@ -14,38 +15,26 @@ const BusMap = dynamic(() => import('./components/BusMap'), {
   ),
 });
 
-interface ApiResponse {
-  message: string;
-  company_info: {
-    name: string;
-    founded: string;
-    headquarters: string;
-    industry: string;
-    description: string;
-  };
-  bus_lines: BusLine[];
-}
 
 export default function Home() {
   const [busData, setBusData] = useState<BusLine[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeBus, setActiveBus] = useState<number | null>(1);
+  const [activeBus, setActiveBus] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    const loadData = async () => {
       try {
-        const data: ApiResponse = (await import('./data/buses.json')).default;
         setBusData(data.bus_lines);
+         if (data.bus_lines.length > 0) {
+      setActiveBus(data.bus_lines[0].id); // اختيار أول Bus تلقائياً
+    }
       } catch (err) {
         console.error(err);
         setError('Failed to load data from local file');
       } finally {
         setLoading(false);
       }
-    };
-    loadData();
   }, []);
 
   const activeRoute = busData.find(bus => bus.id === activeBus);

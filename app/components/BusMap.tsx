@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { BusStop } from '../types';
 
+
 // أيقونة الباص
 const busIcon = new L.Icon({
   iconUrl: '/icons/bus-stop.png',
@@ -59,8 +60,9 @@ export default function BusMap({ stops }: BusMapProps) {
           icon={i === 0 ? busIcon : stop.is_next_stop ? nextStopIcon : stopIcon}
         >
           <Popup>
-            <strong>{stop.name}</strong>
+            <strong>Bus: {stop.name}</strong>
             <br />
+            
             Next arrival: {stop.estimated_arrival}
           </Popup>
         </Marker>

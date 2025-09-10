@@ -52,4 +52,12 @@ export interface BusLine {
     estimated_completion: string;
     frequency_minutes: number;
   };
+  
+}
+
+export interface MapStop extends BusStop {
+  busName: string;
+  currentPassengers: number;
+  capacity: number;
+  nextStopName: string;
 }
